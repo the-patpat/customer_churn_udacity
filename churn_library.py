@@ -388,5 +388,5 @@ def train_models(X_train, X_test, y_train, y_test):
     classification_report_image(y_train, y_test,
         y_train_preds_lr, y_train_preds_rf, y_test_preds_lr, y_test_preds_rf)
 
-    feature_importance_plot(cv_rfc, X_test, constants.FEATURE_IMPORTANCE_PLT_RFC_PTH, constants.FEATURE_IMPORTANCE_SHAP_PLT_RFC_PTH)
+    feature_importance_plot(cv_rfc.best_estimator_, X_test, constants.FEATURE_IMPORTANCE_PLT_RFC_PTH, constants.FEATURE_IMPORTANCE_SHAP_PLT_RFC_PTH)
     feature_importance_plot(lrc, X_test, constants.FEATURE_IMPORTANCE_PLT_LR_PTH, constants.FEATURE_IMPORTANCE_SHAP_PLT_LR_PTH)
