@@ -28,3 +28,22 @@ QUANT_COLUMNS = [
     'Total_Ct_Chng_Q4_Q1', 
     'Avg_Utilization_Ratio'
 ]
+
+DATA_PATH = './data/bank_data.csv'
+#Paths for the EDA plots
+GENDER_PLT_PTH = './images/eda/gender.png'
+AGE_PLT_PTH = './images/eda/age.png'
+CORR_PLT_PTH = './images/eda/correlation.png'
+
+#Paths for the classification report plots
+CLS_REPORT_PLT_PTH = './images/results/classification_report.png'
+ROC_CURVE_PLT_PTH = './images/results/roc_curve.png'
+FEATURE_IMPORTANCE_PLT_LR_PTH = './images/results/feature_importances_lr.png'
+FEATURE_IMPORTANCE_SHAP_PLT_LR_PTH = './images_results/feature_improtances_shap_lr.png'
+FEATURE_IMPORTANCE_PLT_RFC_PTH = './images/results/feature_importances_rfc.png'
+FEATURE_IMPORTANCE_SHAP_PLT_RFC_PTH = './images_results/feature_improtances_shap_rfc.png'
+
+#Paths for the models
+RFC_MODEL_PTH = './models/rfc_model.pkl'
+LR_MODEL_PTH = './models/logistic_model.pkl'
+

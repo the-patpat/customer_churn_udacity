@@ -9,16 +9,16 @@ TODO put the paths in constants.py
 '''
 import os
 import time
-import constants
 import logging
 import pytest
 import churn_library as cl
+import constants
 
 logging.basicConfig(
     filename='./logs/churn_library.log',
     level = logging.INFO,
     filemode='w',
-    format='%(name)s - %(levelname)s - %(message)s')
+    format='[%(asctime)s] %(name)s - %(levelname)s - %(message)s')
 
 #From the production ready code lesson, the following two functions were already coded by Udacity.
 @pytest.fixture(scope="module")
@@ -34,7 +34,7 @@ def encoder_helper():
 	return cl.encoder_helper
 
 @pytest.fixture(scope="module")
-def perform_feature_engineeering():
+def perform_feature_engineering():
 	return cl.perform_feature_engineering
 
 @pytest.fixture(scope="module")
@@ -44,6 +44,10 @@ def classification_report_image():
 @pytest.fixture(scope="module")
 def train_models():
 	return cl.train_models
+
+@pytest.fixture(scope="module")
+def fn_test_models():
+	return cl.test_models
 
 
 def check_file_integrity(path, start_time, end_time):
@@ -111,6 +115,7 @@ def test_import(path, request):
 	try:
 		assert input_df.shape[0] > 0
 		assert input_df.shape[1] > 0
+		logging.info("Testing import_data: Data consistent")
 	except AssertionError as err:
 		logging.error("Testing import_data: The file doesn't appear to have rows and columns")
 		raise err
@@ -132,9 +137,11 @@ def test_eda(perform_eda, request):
 		raise err
 	
 	try:
-		check_file_integrity("./images/eda/gender.png", start_time, end_time)
-		check_file_integrity("./images/eda/age.png", start_time, end_time)
-		check_file_integrity("./images/eda/correlation.png", start_time, end_time)
+		check_file_integrity(constants.GENDER_PLT_PTH, start_time, end_time)
+		check_file_integrity(constants.AGE_PLT_PTH, start_time, end_time)
+		check_file_integrity(constants.CORR_PLT_PTH, start_time, end_time)
+
+		logging.info('Testing perform_eda: SUCCESS')
 
 	except FileNotFoundError as err:
 		logging.error("Testing perform_eda: No plots could be found. Check filepaths.")	
@@ -149,7 +156,7 @@ def test_encoder_helper(encoder_helper, request):
 	'''
 	#Check that the *_Churn columns exists and their value is intact, e.g. not null
 	try:
-		input_df = request.config.cache.get("input_df")		
+		input_df = request.config.cache.get("input_df")
 		result_df = encoder_helper(input_df, constants.CAT_COLUMNS, None)
 
 		#Access all of the categorical columns
@@ -161,6 +168,8 @@ def test_encoder_helper(encoder_helper, request):
 
 		#Save result for the perform feature engineering test
 		request.config.cache.set("encoder_helper_result_df", result_df)
+		
+		logging.info("Testing encoder_helper: SUCCESS")
 
 	except KeyError as err:
 		logging.error("Testing encoder_helper: At least one of the proprtional churn columns is missing.")
@@ -194,13 +203,20 @@ def test_perform_feature_engineering(perform_feature_engineering, request):
 		#Same number of samples between features and target
 		assert X_train.shape[0] == y_train.shape[0]
 		assert X_test.shape[0] == y_test.shape[0]
+
+		request.config.cache.set('X_train', X_train)
+		request.config.cache.set('X_test', X_test)
+		request.config.cache.set('y_train', y_train)
+		request.config.cache.set('y_test', y_test)
+
+		logging.info("Testing perform_feature_engineering: SUCCESS")
 	
 	except KeyError as err:
-		logging.error("Testing feature engineering: There is a missing column.")
+		logging.error("Testing perform_feature_engineering: There is a missing column.")
 		raise err
 
 	except AssertionError as err:
-		logging.error("Testing feature engineering: The train/test split failed and the data is corrupted")
+		logging.error("Testing perform_feature_engineering: The train/test split failed and the data is corrupted")
 		raise err
 
 def test_classification_report_image(classification_report_image, request):
@@ -211,16 +227,25 @@ def test_classification_report_image(classification_report_image, request):
 	'''
 	try:
 		
+		#Get the necessary arguments
+		y_train = request.config.cache.get('y_train')
+		y_train_preds_lr = request.config.cache.get('y_train_preds_lr')
+		y_train_preds_rf = request.config.cache.get('y_train_preds_rf')
+
+		y_test = request.config.cache.get('y_test')
+		y_test_preds_lr = request.config.cache.get('y_test_preds_lr')
+		y_test_preds_rf = request.config.cache.get('y_test_preds_rf')
+
 		#Run the unit
-		#TODO figure out where to get these arguments from
 		_, start_time, end_time = time_unit(classification_report_image, (y_train, y_test,
 									y_train_preds_lr, y_train_preds_rf,
 									y_test_preds_lr, y_test_preds_rf))
 
 		#Check the file integrity
-		check_file_integrity('./images/results/random_forest_report.png', start_time, end_time)
-		check_file_integrity('./images/results/logistic_regression_report.png', start_time, end_time)
-		check_file_integrity('./images/results/roc_curve.png', start_time, end_time)
+		check_file_integrity(constants.CLS_REPORT_PLT_PTH, start_time, end_time)
+		check_file_integrity(constants.ROC_CURVE_PLT_PTH, start_time, end_time)
+		
+		logging.info("Testing classification_report_image: SUCCESS")
 		
 	except FileNotFoundError as err:
 		logging.error("Testing classification_report_image: No plots could be found. Check filepaths.")	
@@ -239,8 +264,12 @@ def test_feature_importance_plot(feature_importance_plot):
 		_, start_time, end_time = time_unit(feature_importance_plot, (model, X_data, output_pth))
 
 		#Do the file integrity test
-		check_file_integrity('./images/results/feature_importances.png', start_time, end_time)
-		check_file_integrity('./images/results/feature_importances_shap.png', start_time, end_time)
+		check_file_integrity(constants.FEATURE_IMPORTANCE_PLT_PTH,
+							start_time, end_time)
+		check_file_integrity(constants.FEATURE_IMPORTANCE_SHAP_PLT_PTH,
+							start_time, end_time)
+
+		logging.info("Testing feature_importance_plot: SUCCESS")
 
 	except FileNotFoundError as err:
 		logging.error("Testing feature_importance_plot: No plots could be found. Check filepaths.")	
@@ -261,6 +290,8 @@ def test_train_models(train_models):
 		check_file_integrity('./models/logistic_model.pkl', start_time, end_time)
 		check_file_integrity('./models/rfc_model.pkl', start_time, end_time)
 
+		logging.info("Testing train_models: SUCCESS")
+
 	except FileNotFoundError as err:
 		logging.error("Testing train_models: No models could be found. Check filepaths.")	
 		raise err
@@ -269,21 +300,46 @@ def test_train_models(train_models):
 		logging.error("Testing train_models: The current run did not create at least one of the models.")
 		raise err
 
-def test_test_models(test_models):
+def test_test_models(fn_test_models, request):
 	'''
 	test test_models
-	TODO: to be implemented later once figured out what is to be tested
 	'''
-	pass
+
+	try:
+		#Run the unit
+		X_train = request.config.cache.get('X_train')
+		X_test = request.config.cache.get('X_test')
+
+		y_train_preds_rf, y_test_preds_rf, y_train_preds_lr, y_test_preds_lr = fn_test_models(X_train, X_test, constants.RFC_MODEL_PTH, constants.LR_MODEL_PTH)
+		
+		#Check data integrity
+		assert y_train_preds_lr.shape[0] == X_train.shape[0]
+		assert y_train_preds_rf.shape[0] == X_train.shape[0]
+		assert y_test_preds_lr.shape[0] == X_test.shape[0]
+		assert y_test_preds_rf.shape[0] == X_test.shape[0]
+
+		#Store the predictions for the next unit
+		request.config.cache.set('y_train_preds_lr', y_train_preds_lr)
+		request.config.cache.set('y_train_preds_rf', y_train_preds_rf)
+		request.config.cache.set('y_test_preds_lr', y_test_preds_lr)
+		request.config.cache.set('y_test_preds_rf', y_test_preds_rf)
+
+		logging.info("Testing test_models: SUCCESS")
+			
+	except AssertionError as err:
+		logging.error('Testing test_models: Shape mismatch, data is corrupted')
+		raise err
 
 
 if __name__ == "__main__":
-	pass
+	
+	#Run the pipeline
+	bank_data_df = cl.import_data(constants.DATA_PATH)
 
+	#Alters the dataframe in place
+	cl.perform_eda(bank_data_df)
 
+	X_train, X_test, y_train, y_test = cl.perform_feature_engineering(bank_data_df, None)
 
-
-
-
-
-
+	cl.train_models(X_train, X_test, y_train, y_test)
+	

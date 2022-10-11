@@ -16,19 +16,27 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import constants
-
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split, GridSearchCV
-
-from sklearn.metrics import plot_roc_curve, classification_report
+from sklearn.metrics import RocCurveDisplay, classification_report
+import constants
 
 
 os.environ['QT_QPA_PLATFORM']='offscreen'
 sns.set()
 
 
+def print_and_log(message, log_fn):
+    '''
+    Prints to the console and logs to log
+
+    Input:
+        message: Message to be printed and logged
+        log_fn: Log function object, e.g. logging.info or logging.debug 
+    '''
+    print(message)
+    log_fn(message)
 
 def import_data(input_pth):
     '''
@@ -44,7 +52,7 @@ def import_data(input_pth):
         input_df.head()
         return input_df
     except FileNotFoundError:
-        logging.error("Could not read file %s", input_pth)
+        print_and_log(f"Could not read file {input_pth}", logging.error)
 
 def perform_eda(input_df):
     '''
@@ -62,33 +70,32 @@ def perform_eda(input_df):
     df_summary = input_df.describe()
 
     #Print out the attributes
-    print(f"Dataframe has {shape[0]} rows and {shape[1]} columns.")
-    print("The amount of rows with null values per column are as follows:")
-    print(null_count_per_column)
-    print("The summary of the dataframe is as follows:")
-    print(df_summary)
-
-    #Log the attributes
-    logging.info("Dataframe has %d rows and %d columns.", shape[0], shape[1])
-    logging.info("The amount of rows with null values per column are as follows:\n%s",
-                null_count_per_column)
-    logging.info("The summary of the dataframe is as follows:\n%s", df_summary)
+    print_and_log(f"Dataframe has {shape[0]} rows and {shape[1]} columns.", logging.info)
+    print_and_log("The amount of rows with null values per column are as follows:", logging.info)
+    print_and_log("\n" + str(null_count_per_column), logging.info)
+    print_and_log("The summary of the dataframe is as follows:", logging.info)
+    print_and_log("\n" + str(df_summary), logging.info)
 
     #Save the plots (this seems kind of repetitive)
     ##Univariate categorical
     plt.figure(figsize=(20,10))
     input_df['Gender'].hist()
-    plt.savefig('./images/eda/gender.png')
+    plt.savefig(constants.GENDER_PLT_PTH)
+    print_and_log(f"Created gender histogram under {constants.GENDER_PLT_PTH}", logging.info)
 
     ##Univariate quantitative
     plt.figure(figsize=(20,10))
     input_df['Customer_Age'].hist()
-    plt.savefig('./images/eda/age.png')
+    plt.savefig(constants.AGE_PLT_PTH)
+    print_and_log(f"Created age histogram under {constants.AGE_PLT_PTH}", logging.info)
 
     ##Bivariate
     plt.figure(figsize=(20,10))
     sns.heatmap(input_df.corr(), annot=False, cmap='Dark2_r', linewidths=2)
-    plt.savefig('./images/eda/correlation.png')
+    plt.savefig(constants.CORR_PLT_PTH)
+    print_and_log(f"Created correlation plot under {constants.CORR_PLT_PTH}", logging.info)
+
+    print_and_log("EDA finished.", logging.info)
 
 def encoder_helper(input_df, category_lst, response):
     '''
@@ -103,6 +110,7 @@ def encoder_helper(input_df, category_lst, response):
     output:
             df: pandas dataframe with new columns for
     '''
+    print_and_log("Encoding columns....", logging.info)
     #Create Churn column: Only 0 if existing customer, else 1
     input_df['Churn'] = input_df['Attrition_Flag'].apply(lambda val: 0 if val == "Existing Customer" else 1)
 
@@ -150,6 +158,7 @@ def encoder_helper(input_df, category_lst, response):
 
     input_df['Card_Category_Churn'] = card_lst
 
+    print_and_log("Encoded columns", logging.info)
     return input_df
 
 
@@ -167,6 +176,7 @@ def perform_feature_engineering(input_df, response):
     '''
     
     
+    print_and_log("Performing feature engineering", logging.info)
     input_df = encoder_helper(input_df, constants.CAT_COLUMNS, None)
 
     #Empty dataframe for features
@@ -188,10 +198,9 @@ def perform_feature_engineering(input_df, response):
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size= 0.3, random_state=42)
 
+    print_and_log("Performed feature engineering", logging.info)
+
     return X_train, X_test, y_train, y_test
-
-
-
 
 def classification_report_image(y_train,
                                 y_test,
@@ -213,56 +222,65 @@ def classification_report_image(y_train,
     output:
              None
     '''
-    print('random forest results')
-    print('test results')
-    print(classification_report(y_test, y_test_preds_rf))
-    print('train results')
-    print(classification_report(y_train, y_train_preds_rf))
+    print_and_log('random forest results', logging.info)
+    print_and_log('test results', logging.info)
+    print_and_log("\n" + str(classification_report(y_test, y_test_preds_rf)), logging.info)
+    print_and_log('train results', logging.info)
+    print_and_log("\n" + str(classification_report(y_train, y_train_preds_rf)), logging.info)
 
-    print('logistic regression results')
-    print('test results')
-    print(classification_report(y_test, y_test_preds_lr))
-    print('train results')
-    print(classification_report(y_train, y_train_preds_lr))
+    print_and_log('logistic regression results', logging.info)
+    print_and_log('test results', logging.info)
+    print_and_log("\n" + str(classification_report(y_test, y_test_preds_lr)), logging.info)
+    print_and_log('train results', logging.info)
+    print_and_log("\n" + str(classification_report(y_train, y_train_preds_lr)), logging.info)
 
     #again, but saving it as a figure.
     #TODO save the classification report in a local variable to avoid double computation
+    print_and_log("Creating graphical classification report", logging.info)
     plt.rc('figure', figsize=(5, 5))
     plt.text(0.01, 1.25, str('Random Forest Train'), {'fontsize': 10}, fontproperties = 'monospace')
     plt.text(0.01, 0.05, str(classification_report(y_test, y_test_preds_rf)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
     plt.text(0.01, 0.6, str('Random Forest Test'), {'fontsize': 10}, fontproperties = 'monospace')
     plt.text(0.01, 0.7, str(classification_report(y_train, y_train_preds_rf)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
     plt.axis('off')
+    plt.savefig(constants.CLS_REPORT_PLT_PTH)
+    print_and_log(f"Saved graphical report to {constants.CLS_REPORT_PLT_PTH}", logging.info)
 
-    plt.figure(figsize=(14, 8))
+    print_and_log("Creating ROC curves", logging.info)
+    lrc_plot = RocCurveDisplay.from_predictions(y_test, y_test_preds_lr)
     ax = plt.gca()
-    rfc_disp = plot_roc_curve(cv_rfc.best_estimator_, X_test, y_test, ax=ax, alpha=-1.8)
-    lrc_plot.plot(ax=ax, alpha=-1.8)
-    plt.show()
+    rfc_disp = RocCurveDisplay.from_predictions(y_test, y_test_preds_rf,
+                                                ax=ax, alpha=-1.8)
+    lrc_plot.plot(ax=ax, alpha=0.8)
+    plt.savefig(constants.ROC_CURVE_PLT_PTH)
+    print_and_log(f"Saved ROC curve plot to {constants.ROC_CURVE_PLT_PTH}", logging.info)
 
 
-def feature_importance_plot(model, X_data, output_pth):
+def feature_importance_plot(model, X_data, output_pth, shap_output_pth):
     '''
     creates and stores the feature importances in pth
     input:
             model: model object containing feature_importances_
             X_data: pandas dataframe of X values
-            output_pth: path to store the figure
+            output_pth: Path for the feature importance plot to save
+            shap_output_pth: Path for the shap feature importance plot to save
 
     output:
              None
     '''
-    explainer = shap.TreeExplainer(cv_rfc.best_estimator_)
-    shap_values = explainer.shap_values(X_test)
-    shap.summary_plot(shap_values, X_test, plot_type="bar")
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X_data)
+    shap.summary_plot(shap_values, X_data, plot_type="bar")
+    plt.savefig(shap_output_pth)
+    print_and_log(f"Saved shap plot under {shap_output_pth}", logging.info)
 
     # Calculate feature importances
-    importances = cv_rfc.best_estimator_.feature_importances_
+    importances = model.best_estimator_.feature_importances_
     # Sort feature importances in descending order
     indices = np.argsort(importances)[::-1]
 
     # Rearrange feature names so they match the sorted feature importances
-    names = [X.columns[i] for i in indices]
+    names = [X_data.columns[i] for i in indices]
 
     # Create plot
     plt.figure(figsize=(20,5))
@@ -272,10 +290,54 @@ def feature_importance_plot(model, X_data, output_pth):
     plt.ylabel('Importance')
 
     # Add bars
-    plt.bar(range(X.shape[1]), importances[indices])
+    plt.bar(range(X_data.shape[1]), importances[indices])
 
     # Add feature names as x-axis labels
-    plt.xticks(range(X.shape[1]), names, rotation=90);
+    plt.xticks(range(X_data.shape[1]), names, rotation=90)
+
+    plt.savefig(output_pth)
+    print_and_log(f"Saved feature importance plot under {output_pth}", logging.info)
+
+def test_models(X_train, X_test, model_pth_rf, model_pth_lr):
+    '''
+    test models after completed training
+
+    Input:
+        X_train: X training data
+        X_test: X testing data
+        model_rf: random forest model
+        model_lr: logistic regression model
+    
+    Output:
+        y_train_preds_rf: Prediction result for the random forest classifier
+                            on the train split
+        y_test_preds_rf: Prediction result for the random forest classifier
+                            on the test split
+        y_train_preds_lr: Prediction result for the log reg classifier
+                            on the train split
+        y_test_preds_lr: Prediction result for the log reg classifier
+                            on the test split
+
+    '''
+    
+    #Load the models from disk
+    print_and_log(f"Loading model from path {model_pth_rf}", logging.info)
+    rfc = joblib.load(model_pth_rf)
+
+    print_and_log(f"Loading model from path {model_pth_lr}", logging.info)
+    lrc = joblib.load(model_pth_lr)
+
+    print_and_log("Predicting values with random forest classifier", logging.info)
+    #Do prediction for random forest
+    y_train_preds_rf = rfc.predict(X_train)
+    y_test_preds_rf = rfc.predict(X_test)
+
+    print_and_log("Predicting values from logistic regression classifier", logging.info)
+    #Do prediction for logistic regression
+    y_train_preds_lr = lrc.predict(X_train)
+    y_test_preds_lr = lrc.predict(X_test)
+
+    return y_train_preds_rf, y_test_preds_rf, y_train_preds_lr, y_test_preds_lr
 
 def train_models(X_train, X_test, y_train, y_test):
     '''
@@ -302,33 +364,29 @@ def train_models(X_train, X_test, y_train, y_test):
     }
 
     #Random forest classifier training
+    print_and_log("Performing Random Forest Grid search...", logging.info)
     cv_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
     cv_rfc.fit(X_train, y_train)
+    print_and_log("Finished grid search of rf classifier", logging.info)
 
     #Logistic regression classifier training
+    print_and_log("Training LR classifier", logging.info)
     lrc.fit(X_train, y_train)
+    print_and_log("Trained LR classifier", logging.info)
 
     #Save best model
-    joblib.dump(cv_rfc.best_estimator_, './models/rfc_model.pkl')
-    joblib.dump(lrc, './models/logistic_model.pkl')
+    joblib.dump(cv_rfc.best_estimator_, constants.RFC_MODEL_PTH)
+    print_and_log(f"Dumped RFC model under {constants.RFC_MODEL_PTH}", logging.info)
+    joblib.dump(lrc, constants.LR_MODEL_PTH)
+    print_and_log(f"Dumped LR model under {constants.RFC_MODEL_PTH}", logging.info)
+
+    #Use the model. Formula is WX + b = y, used by the predict function
+    (y_train_preds_rf, y_test_preds_rf,
+    y_train_preds_lr, y_test_preds_lr) = test_models(X_train, X_test,
+        constants.RFC_MODEL_PTH, constants.LR_MODEL_PTH)
     
+    classification_report_image(y_train, y_test,
+        y_train_preds_lr, y_train_preds_rf, y_test_preds_lr, y_test_preds_rf)
 
-def test_models(X_train, X_test, model_pth_rf, model_pth_lr):
-    '''
-    test models after completed training
-
-    Input:
-        X_train: X training data
-        X_test: X testing data
-        model_rf: random forest model
-        model_lr: logistic regression model
-    
-    Output:
-        TBD
-    '''
-    y_train_preds_rf = cv_rfc.best_estimator_.predict(X_train)
-    y_test_preds_rf = cv_rfc.best_estimator_.predict(X_test)
-
-    y_train_preds_lr = lrc.predict(X_train)
-    y_test_preds_lr = lrc.predict(X_test)
-    pass
+    feature_importance_plot(cv_rfc, X_test, constants.FEATURE_IMPORTANCE_PLT_RFC_PTH, constants.FEATURE_IMPORTANCE_SHAP_PLT_RFC_PTH)
+    feature_importance_plot(lrc, X_test, constants.FEATURE_IMPORTANCE_PLT_LR_PTH, constants.FEATURE_IMPORTANCE_SHAP_PLT_LR_PTH)
