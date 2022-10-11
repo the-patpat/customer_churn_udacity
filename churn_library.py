@@ -250,7 +250,7 @@ def classification_report_image(y_train,
     lrc_plot = RocCurveDisplay.from_predictions(y_test, y_test_preds_lr)
     ax = plt.gca()
     rfc_disp = RocCurveDisplay.from_predictions(y_test, y_test_preds_rf,
-                                                ax=ax, alpha=-1.8)
+                                                ax=ax, alpha=0.8)
     lrc_plot.plot(ax=ax, alpha=0.8)
     plt.savefig(constants.ROC_CURVE_PLT_PTH)
     print_and_log(f"Saved ROC curve plot to {constants.ROC_CURVE_PLT_PTH}", logging.info)
