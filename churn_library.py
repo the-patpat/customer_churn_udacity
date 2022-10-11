@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import constants
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -102,6 +103,9 @@ def encoder_helper(input_df, category_lst, response):
     output:
             df: pandas dataframe with new columns for
     '''
+    #Create Churn column: Only 0 if existing customer, else 1
+    input_df['Churn'] = input_df['Attrition_Flag'].apply(lambda val: 0 if val == "Existing Customer" else 1)
+
     # gender encoded column
     gender_lst = []
     gender_groups = input_df.groupby('Gender').mean()['Churn']
@@ -146,6 +150,8 @@ def encoder_helper(input_df, category_lst, response):
 
     input_df['Card_Category_Churn'] = card_lst
 
+    return input_df
+
 
 def perform_feature_engineering(input_df, response):
     '''
@@ -160,8 +166,8 @@ def perform_feature_engineering(input_df, response):
               y_test: y testing data
     '''
     
-    #Create Churn column: Only 0 if existing customer, else 1
-    input_df['Churn'] = input_df['Attrition_Flag'].apply(lambda val: 0 if val == "Existing Customer" else 1)
+    
+    input_df = encoder_helper(input_df, constants.CAT_COLUMNS, None)
 
     #Empty dataframe for features
     X = pd.DataFrame()
@@ -218,6 +224,15 @@ def classification_report_image(y_train,
     print(classification_report(y_test, y_test_preds_lr))
     print('train results')
     print(classification_report(y_train, y_train_preds_lr))
+
+    #again, but saving it as a figure.
+    #TODO save the classification report in a local variable to avoid double computation
+    plt.rc('figure', figsize=(5, 5))
+    plt.text(0.01, 1.25, str('Random Forest Train'), {'fontsize': 10}, fontproperties = 'monospace')
+    plt.text(0.01, 0.05, str(classification_report(y_test, y_test_preds_rf)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+    plt.text(0.01, 0.6, str('Random Forest Test'), {'fontsize': 10}, fontproperties = 'monospace')
+    plt.text(0.01, 0.7, str(classification_report(y_train, y_train_preds_rf)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+    plt.axis('off')
 
     plt.figure(figsize=(14, 8))
     ax = plt.gca()
