@@ -10,6 +10,7 @@ TODO put the paths in constants.py
 import os
 import time
 import logging
+import joblib
 import pytest
 import churn_library as cl
 import constants
@@ -48,6 +49,10 @@ def train_models():
 @pytest.fixture(scope="module")
 def fn_test_models():
 	return cl.test_models
+
+@pytest.fixture(scope="module")
+def feature_importance_plot():
+	return cl.feature_importance_plot
 
 
 def check_file_integrity(path, start_time, end_time):
@@ -106,7 +111,8 @@ def test_import(path, request):
 	'''
 	try:
 		input_df = cl.import_data(path)
-		request.config.cache.set('input_df', input_df)
+		pytest.input_df = input_df
+		#request.config.cache.set('input_df', input_df)
 		logging.info("Testing import_data: SUCCESS")
 	except FileNotFoundError as err:
 		logging.error("Testing import_eda: The file wasn't found")
@@ -129,8 +135,8 @@ def test_eda(perform_eda, request):
 	end_time = None
 	#Load the dataframe from cache (will be better once dataframes get bigger)
 	try:
-		input_df = request.config.cache.get('input_df')	
-		_, start_time, end_time = time_unit(perform_eda, (input_df))
+		input_df = pytest.input_df 
+		_, start_time, end_time = time_unit(perform_eda, (input_df,))
 		logging.info("Performing EDA: SUCCESS")
 	except FileNotFoundError as err:
 		logging.error("Testing perform_eda: Plots could not be saved, check that the ./images/eda/ path exists.")
@@ -156,7 +162,7 @@ def test_encoder_helper(encoder_helper, request):
 	'''
 	#Check that the *_Churn columns exists and their value is intact, e.g. not null
 	try:
-		input_df = request.config.cache.get("input_df")
+		input_df = pytest.input_df 
 		result_df = encoder_helper(input_df, constants.CAT_COLUMNS, None)
 
 		#Access all of the categorical columns
@@ -164,10 +170,10 @@ def test_encoder_helper(encoder_helper, request):
 		result_df[cat_columns_with_churn]
 
 		#Check that the data is intact
-		assert result_df[cat_columns_with_churn].isnull().any().any()
+		assert not result_df[cat_columns_with_churn].isnull().any().any()
 
 		#Save result for the perform feature engineering test
-		request.config.cache.set("encoder_helper_result_df", result_df)
+		pytest.encoder_helper_result_df = result_df
 		
 		logging.info("Testing encoder_helper: SUCCESS")
 
@@ -176,8 +182,8 @@ def test_encoder_helper(encoder_helper, request):
 		raise err
 	except AssertionError as err:
 		logging.error("Testing encoder_helper: Data is corrupted, at least one column has a null entry.")
+		logging.error("\n" + str(result_df[cat_columns_with_churn].isnull().any()))
 		raise err
-
 
 
 def test_perform_feature_engineering(perform_feature_engineering, request):
@@ -185,7 +191,7 @@ def test_perform_feature_engineering(perform_feature_engineering, request):
 	test perform_feature_engineering
 	'''
 	try:
-		input_df = request.config.cache.get("input_df")
+		input_df = pytest.input_df
 		X_train, X_test, y_train, y_test = perform_feature_engineering(input_df, None)
 		
 		#Check that the split train/test data is intact
@@ -204,10 +210,14 @@ def test_perform_feature_engineering(perform_feature_engineering, request):
 		assert X_train.shape[0] == y_train.shape[0]
 		assert X_test.shape[0] == y_test.shape[0]
 
-		request.config.cache.set('X_train', X_train)
-		request.config.cache.set('X_test', X_test)
-		request.config.cache.set('y_train', y_train)
-		request.config.cache.set('y_test', y_test)
+		pytest.X_train = X_train
+		pytest.X_test = X_test
+		pytest.y_train = y_train
+		pytest.y_test = y_test
+		# request.config.cache.set('X_train', X_train)
+		# request.config.cache.set('X_test', X_test)
+		# request.config.cache.set('y_train', y_train)
+		# request.config.cache.set('y_test', y_test)
 
 		logging.info("Testing perform_feature_engineering: SUCCESS")
 	
@@ -219,6 +229,42 @@ def test_perform_feature_engineering(perform_feature_engineering, request):
 		logging.error("Testing perform_feature_engineering: The train/test split failed and the data is corrupted")
 		raise err
 
+def test_test_models(fn_test_models, request):
+	'''
+	test test_models
+	'''
+
+	try:
+		#Run the unit
+		X_train = pytest.X_train #request.config.cache.get('X_train')
+		X_test = pytest.X_test #request.config.cache.get('X_test')
+
+		y_train_preds_rf, y_test_preds_rf, y_train_preds_lr, y_test_preds_lr = fn_test_models(X_train, X_test, constants.RFC_MODEL_PTH, constants.LR_MODEL_PTH)
+
+				
+		#Check data integrity
+		assert y_train_preds_lr.shape[0] == X_train.shape[0]
+		assert y_train_preds_rf.shape[0] == X_train.shape[0]
+		assert y_test_preds_lr.shape[0] == X_test.shape[0]
+		assert y_test_preds_rf.shape[0] == X_test.shape[0]
+
+		#Store in namespace
+		pytest.y_train_preds_rf = y_train_preds_rf
+		pytest.y_train_preds_lr = y_train_preds_lr
+		pytest.y_test_preds_rf = y_test_preds_rf
+		pytest.y_test_preds_lr = y_test_preds_lr
+		#Store the predictions for the next unit
+		# request.config.cache.set('y_train_preds_lr', y_train_preds_lr)
+		# request.config.cache.set('y_train_preds_rf', y_train_preds_rf)
+		# request.config.cache.set('y_test_preds_lr', y_test_preds_lr)
+		# request.config.cache.set('y_test_preds_rf', y_test_preds_rf)
+
+		logging.info("Testing test_models: SUCCESS")
+			
+	except AssertionError as err:
+		logging.error('Testing test_models: Shape mismatch, data is corrupted')
+		raise err
+
 def test_classification_report_image(classification_report_image, request):
 	'''
 	test classification_report_image
@@ -228,13 +274,16 @@ def test_classification_report_image(classification_report_image, request):
 	try:
 		
 		#Get the necessary arguments
-		y_train = request.config.cache.get('y_train')
-		y_train_preds_lr = request.config.cache.get('y_train_preds_lr')
-		y_train_preds_rf = request.config.cache.get('y_train_preds_rf')
+		y_train = pytest.y_train 
+		#request.config.cache.get('y_train')
+		y_train_preds_lr = pytest.y_train_preds_lr 
+		#request.config.cache.get('y_train_preds_lr')
+		y_train_preds_rf = pytest.y_train_preds_rf
+		#request.config.cache.get('y_train_preds_rf')
 
-		y_test = request.config.cache.get('y_test')
-		y_test_preds_lr = request.config.cache.get('y_test_preds_lr')
-		y_test_preds_rf = request.config.cache.get('y_test_preds_rf')
+		y_test = pytest.y_test# request.config.cache.get('y_test')
+		y_test_preds_lr = pytest.y_test_preds_lr# request.config.cache.get('y_test_preds_lr')
+		y_test_preds_rf = pytest.y_test_preds_rf#request.config.cache.get('y_test_preds_rf')
 
 		#Run the unit
 		_, start_time, end_time = time_unit(classification_report_image, (y_train, y_test,
@@ -261,12 +310,17 @@ def test_feature_importance_plot(feature_importance_plot):
 	'''
 	try:
 		#Run the unit
-		_, start_time, end_time = time_unit(feature_importance_plot, (model, X_data, output_pth))
+		
+		#Load the rf model from disk
+
+		rfc = joblib.load(constants.RFC_MODEL_PTH)
+		X_test = pytest.X_test
+		_, start_time, end_time = time_unit(feature_importance_plot, (rfc, X_test, constants.FEATURE_IMPORTANCE_PLT_RFC_PTH, constants.FEATURE_IMPORTANCE_SHAP_PLT_RFC_PTH))
 
 		#Do the file integrity test
-		check_file_integrity(constants.FEATURE_IMPORTANCE_PLT_PTH,
+		check_file_integrity(constants.FEATURE_IMPORTANCE_PLT_RFC_PTH,
 							start_time, end_time)
-		check_file_integrity(constants.FEATURE_IMPORTANCE_SHAP_PLT_PTH,
+		check_file_integrity(constants.FEATURE_IMPORTANCE_SHAP_PLT_RFC_PTH,
 							start_time, end_time)
 
 		logging.info("Testing feature_importance_plot: SUCCESS")
@@ -285,6 +339,11 @@ def test_train_models(train_models):
 	'''
 	try:
 		#Time the unit
+		X_train = pytest.X_train
+		X_test = pytest.X_test
+		y_train = pytest.y_train
+		y_test = pytest.y_test
+
 		_, start_time, end_time = time_unit(train_models, (X_train, X_test, y_train, y_test))
 
 		check_file_integrity('./models/logistic_model.pkl', start_time, end_time)
@@ -300,35 +359,6 @@ def test_train_models(train_models):
 		logging.error("Testing train_models: The current run did not create at least one of the models.")
 		raise err
 
-def test_test_models(fn_test_models, request):
-	'''
-	test test_models
-	'''
-
-	try:
-		#Run the unit
-		X_train = request.config.cache.get('X_train')
-		X_test = request.config.cache.get('X_test')
-
-		y_train_preds_rf, y_test_preds_rf, y_train_preds_lr, y_test_preds_lr = fn_test_models(X_train, X_test, constants.RFC_MODEL_PTH, constants.LR_MODEL_PTH)
-		
-		#Check data integrity
-		assert y_train_preds_lr.shape[0] == X_train.shape[0]
-		assert y_train_preds_rf.shape[0] == X_train.shape[0]
-		assert y_test_preds_lr.shape[0] == X_test.shape[0]
-		assert y_test_preds_rf.shape[0] == X_test.shape[0]
-
-		#Store the predictions for the next unit
-		request.config.cache.set('y_train_preds_lr', y_train_preds_lr)
-		request.config.cache.set('y_train_preds_rf', y_train_preds_rf)
-		request.config.cache.set('y_test_preds_lr', y_test_preds_lr)
-		request.config.cache.set('y_test_preds_rf', y_test_preds_rf)
-
-		logging.info("Testing test_models: SUCCESS")
-			
-	except AssertionError as err:
-		logging.error('Testing test_models: Shape mismatch, data is corrupted')
-		raise err
 
 
 if __name__ == "__main__":

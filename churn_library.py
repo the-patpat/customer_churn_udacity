@@ -12,9 +12,11 @@ import os
 import logging
 import joblib
 import shap
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -25,6 +27,7 @@ import constants
 
 os.environ['QT_QPA_PLATFORM']='offscreen'
 sns.set()
+
 
 
 def print_and_log(message, log_fn):
@@ -237,7 +240,7 @@ def classification_report_image(y_train,
     #again, but saving it as a figure.
     #TODO save the classification report in a local variable to avoid double computation
     print_and_log("Creating graphical classification report", logging.info)
-    plt.rc('figure', figsize=(5, 5))
+    plt.figure(figsize=(5,5))
     plt.text(0.01, 1.25, str('Random Forest Train'), {'fontsize': 10}, fontproperties = 'monospace')
     plt.text(0.01, 0.05, str(classification_report(y_test, y_test_preds_rf)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
     plt.text(0.01, 0.6, str('Random Forest Test'), {'fontsize': 10}, fontproperties = 'monospace')
@@ -268,14 +271,18 @@ def feature_importance_plot(model, X_data, output_pth, shap_output_pth):
     output:
              None
     '''
+    print_and_log("Running SHAP analysis...", logging.info)
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(X_data)
+    print("running shap.summary_plot")
+    plt.figure()
     shap.summary_plot(shap_values, X_data, plot_type="bar")
+    print("running plt.savefig")
     plt.savefig(shap_output_pth)
     print_and_log(f"Saved shap plot under {shap_output_pth}", logging.info)
 
     # Calculate feature importances
-    importances = model.best_estimator_.feature_importances_
+    importances = model.feature_importances_
     # Sort feature importances in descending order
     indices = np.argsort(importances)[::-1]
 
@@ -358,14 +365,15 @@ def train_models(X_train, X_test, y_train, y_test):
 
     param_grid = { 
         'n_estimators': [200, 500],
-        'max_features': ['auto', 'sqrt'],
+        'max_features': ['sqrt'],
         'max_depth' : [4,5,100],
         'criterion' :['gini', 'entropy']
     }
 
     #Random forest classifier training
-    print_and_log("Performing Random Forest Grid search...", logging.info)
-    cv_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5)
+    print_and_log("Performing Random Forest Grid search with n_jobs=12", logging.info)
+    print_and_log("Decrease this value if system becomes irresponsive.", logging.info)
+    cv_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5, n_jobs=12)
     cv_rfc.fit(X_train, y_train)
     print_and_log("Finished grid search of rf classifier", logging.info)
 
@@ -388,5 +396,6 @@ def train_models(X_train, X_test, y_train, y_test):
     classification_report_image(y_train, y_test,
         y_train_preds_lr, y_train_preds_rf, y_test_preds_lr, y_test_preds_rf)
 
+    #Only do it with the random forest classifier because it SHAP does not 
+    #support Logistic Regression classifiers
     feature_importance_plot(cv_rfc.best_estimator_, X_test, constants.FEATURE_IMPORTANCE_PLT_RFC_PTH, constants.FEATURE_IMPORTANCE_SHAP_PLT_RFC_PTH)
-    feature_importance_plot(lrc, X_test, constants.FEATURE_IMPORTANCE_PLT_LR_PTH, constants.FEATURE_IMPORTANCE_SHAP_PLT_LR_PTH)
