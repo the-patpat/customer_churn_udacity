@@ -6,10 +6,11 @@ This repository contains the code need to run the project **Predict Customer Chu
 The purpose of this project is to predict whether customers are, based on features like age, gender, income and such, likely to churn from their current credit card provider, meaning that they stop using the card services. The project is also demonstrating clean code principles according to PEP8 standards. In addition to that, tests are implemented to verify the validity of the solution.
 
 ## Prerequisites
-Install the necessary dependencies by running the following command:
-```bash
-pip install -r requirements.txt
-```
+- Have Python 3.8 installed on your computer.
+- Install the necessary dependencies by running the following command:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 ## Files and data description
 This project is structured as follows:
