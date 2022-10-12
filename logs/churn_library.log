@@ -1,0 +1,111 @@
+[2022-10-12 10:08:58,779] root - INFO - Dataframe has 10127 rows and 22 columns.
+[2022-10-12 10:08:58,780] root - INFO - The amount of rows with null values per column are as follows:
+[2022-10-12 10:08:58,781] root - INFO - 
+Unnamed: 0                  0
+CLIENTNUM                   0
+Attrition_Flag              0
+Customer_Age                0
+Gender                      0
+Dependent_count             0
+Education_Level             0
+Marital_Status              0
+Income_Category             0
+Card_Category               0
+Months_on_book              0
+Total_Relationship_Count    0
+Months_Inactive_12_mon      0
+Contacts_Count_12_mon       0
+Credit_Limit                0
+Total_Revolving_Bal         0
+Avg_Open_To_Buy             0
+Total_Amt_Chng_Q4_Q1        0
+Total_Trans_Amt             0
+Total_Trans_Ct              0
+Total_Ct_Chng_Q4_Q1         0
+Avg_Utilization_Ratio       0
+dtype: int64
+[2022-10-12 10:08:58,781] root - INFO - The summary of the dataframe is as follows:
+[2022-10-12 10:08:58,805] root - INFO - 
+         Unnamed: 0     CLIENTNUM  Customer_Age  Dependent_count  Months_on_book  ...  Total_Amt_Chng_Q4_Q1  Total_Trans_Amt  Total_Trans_Ct  Total_Ct_Chng_Q4_Q1  Avg_Utilization_Ratio
+count  10127.000000  1.012700e+04  10127.000000     10127.000000    10127.000000  ...          10127.000000     10127.000000    10127.000000         10127.000000           10127.000000
+mean    5063.000000  7.391776e+08     46.325960         2.346203       35.928409  ...              0.759941      4404.086304       64.858695             0.712222               0.274894
+std     2923.557422  3.690378e+07      8.016814         1.298908        7.986416  ...              0.219207      3397.129254       23.472570             0.238086               0.275691
+min        0.000000  7.080821e+08     26.000000         0.000000       13.000000  ...              0.000000       510.000000       10.000000             0.000000               0.000000
+25%     2531.500000  7.130368e+08     41.000000         1.000000       31.000000  ...              0.631000      2155.500000       45.000000             0.582000               0.023000
+50%     5063.000000  7.179264e+08     46.000000         2.000000       36.000000  ...              0.736000      3899.000000       67.000000             0.702000               0.176000
+75%     7594.500000  7.731435e+08     52.000000         3.000000       40.000000  ...              0.859000      4741.000000       81.000000             0.818000               0.503000
+max    10126.000000  8.283431e+08     73.000000         5.000000       56.000000  ...              3.397000     18484.000000      139.000000             3.714000               0.999000
+
+[8 rows x 16 columns]
+[2022-10-12 10:08:59,083] root - INFO - Created gender histogram under ./images/eda/gender.png
+[2022-10-12 10:08:59,279] root - INFO - Created age histogram under ./images/eda/age.png
+[2022-10-12 10:08:59,835] root - INFO - Created correlation plot under ./images/eda/correlation.png
+[2022-10-12 10:08:59,835] root - INFO - EDA finished.
+[2022-10-12 10:08:59,836] root - INFO - Performing feature engineering
+[2022-10-12 10:08:59,836] root - INFO - Encoding columns....
+[2022-10-12 10:09:00,346] root - INFO - Encoded columns
+[2022-10-12 10:09:00,360] root - INFO - Performed feature engineering
+[2022-10-12 10:09:00,360] root - INFO - Performing Random Forest Grid search with n_jobs=12
+[2022-10-12 10:09:00,360] root - INFO - Decrease this value if system becomes irresponsive.
+[2022-10-12 10:10:01,250] root - INFO - Finished grid search of rf classifier
+[2022-10-12 10:10:01,250] root - INFO - Training LR classifier
+[2022-10-12 10:10:02,189] root - INFO - Trained LR classifier
+[2022-10-12 10:10:02,331] root - INFO - Dumped RFC model under ./models/rfc_model.pkl
+[2022-10-12 10:10:02,333] root - INFO - Dumped LR model under ./models/rfc_model.pkl
+[2022-10-12 10:10:02,334] root - INFO - Loading model from path ./models/rfc_model.pkl
+[2022-10-12 10:10:02,395] root - INFO - Loading model from path ./models/logistic_model.pkl
+[2022-10-12 10:10:02,396] root - INFO - Predicting values with random forest classifier
+[2022-10-12 10:10:02,716] root - INFO - Predicting values from logistic regression classifier
+[2022-10-12 10:10:02,748] root - INFO - random forest results
+[2022-10-12 10:10:02,748] root - INFO - test results
+[2022-10-12 10:10:02,755] root - INFO - 
+              precision    recall  f1-score   support
+
+           0       0.96      0.99      0.98      2543
+           1       0.93      0.80      0.86       496
+
+    accuracy                           0.96      3039
+   macro avg       0.95      0.90      0.92      3039
+weighted avg       0.96      0.96      0.96      3039
+
+[2022-10-12 10:10:02,755] root - INFO - train results
+[2022-10-12 10:10:02,787] root - INFO - 
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00      5957
+           1       1.00      1.00      1.00      1131
+
+    accuracy                           1.00      7088
+   macro avg       1.00      1.00      1.00      7088
+weighted avg       1.00      1.00      1.00      7088
+
+[2022-10-12 10:10:02,810] root - INFO - logistic regression results
+[2022-10-12 10:10:02,810] root - INFO - test results
+[2022-10-12 10:10:02,823] root - INFO - 
+              precision    recall  f1-score   support
+
+           0       0.90      0.97      0.93      2543
+           1       0.72      0.44      0.54       496
+
+    accuracy                           0.88      3039
+   macro avg       0.81      0.70      0.74      3039
+weighted avg       0.87      0.88      0.87      3039
+
+[2022-10-12 10:10:02,833] root - INFO - train results
+[2022-10-12 10:10:02,850] root - INFO - 
+              precision    recall  f1-score   support
+
+           0       0.91      0.96      0.94      5957
+           1       0.73      0.50      0.59      1131
+
+    accuracy                           0.89      7088
+   macro avg       0.82      0.73      0.76      7088
+weighted avg       0.88      0.89      0.88      7088
+
+[2022-10-12 10:10:02,850] root - INFO - Creating graphical classification report
+[2022-10-12 10:10:02,995] root - INFO - Saved graphical report to ./images/results/classification_report.png
+[2022-10-12 10:10:02,995] root - INFO - Creating ROC curves
+[2022-10-12 10:10:03,154] root - INFO - Saved ROC curve plot to ./images/results/roc_curve.png
+[2022-10-12 10:10:03,154] root - INFO - Running SHAP analysis...
+[2022-10-12 10:11:20,918] root - INFO - Saved shap plot under ./images/results/feature_improtances_shap_rfc.png
+[2022-10-12 10:11:21,241] root - INFO - Saved feature importance plot under ./images/results/feature_importances_rfc.png
