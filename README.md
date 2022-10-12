@@ -68,7 +68,8 @@ To run the script in testing mode, run the following command at the root level o
 ```bash
 pytest churn_script_logging_and_testing.py
 ```
-This command executes the implemented unit tests in the specified script. It should execute without any error.
+This command executes the implemented unit tests in the specified script. It should execute without any error:
+![Screenshot of Pytest](./images/pytest_screenshot.png)
 
 
 
