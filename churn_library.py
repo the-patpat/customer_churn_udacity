@@ -83,18 +83,25 @@ def perform_eda(input_df):
     ##Univariate categorical
     plt.figure(figsize=(20,10))
     input_df['Gender'].hist()
+    plt.xlabel("Gender")
+    plt.ylabel("Count")
+    plt.tight_layout()
     plt.savefig(constants.GENDER_PLT_PTH)
     print_and_log(f"Created gender histogram under {constants.GENDER_PLT_PTH}", logging.info)
 
     ##Univariate quantitative
     plt.figure(figsize=(20,10))
     input_df['Customer_Age'].hist()
+    plt.xlabel("Age")
+    plt.ylabel("Count")
+    plt.tight_layout()
     plt.savefig(constants.AGE_PLT_PTH)
     print_and_log(f"Created age histogram under {constants.AGE_PLT_PTH}", logging.info)
 
     ##Bivariate
     plt.figure(figsize=(20,10))
     sns.heatmap(input_df.corr(), annot=False, cmap='Dark2_r', linewidths=2)
+    plt.tight_layout()
     plt.savefig(constants.CORR_PLT_PTH)
     print_and_log(f"Created correlation plot under {constants.CORR_PLT_PTH}", logging.info)
 
@@ -240,12 +247,13 @@ def classification_report_image(y_train,
     #again, but saving it as a figure.
     #TODO save the classification report in a local variable to avoid double computation
     print_and_log("Creating graphical classification report", logging.info)
-    plt.figure(figsize=(5,5))
+    plt.figure(figsize=(7,5))
     plt.text(0.01, 1.25, str('Random Forest Train'), {'fontsize': 10}, fontproperties = 'monospace')
     plt.text(0.01, 0.05, str(classification_report(y_test, y_test_preds_rf)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
     plt.text(0.01, 0.6, str('Random Forest Test'), {'fontsize': 10}, fontproperties = 'monospace')
     plt.text(0.01, 0.7, str(classification_report(y_train, y_train_preds_rf)), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
     plt.axis('off')
+    plt.tight_layout()
     plt.savefig(constants.CLS_REPORT_PLT_PTH)
     print_and_log(f"Saved graphical report to {constants.CLS_REPORT_PLT_PTH}", logging.info)
 
@@ -254,7 +262,7 @@ def classification_report_image(y_train,
     ax = plt.gca()
     rfc_disp = RocCurveDisplay.from_predictions(y_test, y_test_preds_rf,
                                                 ax=ax, alpha=0.8)
-    lrc_plot.plot(ax=ax, alpha=0.8)
+    plt.tight_layout()
     plt.savefig(constants.ROC_CURVE_PLT_PTH)
     print_and_log(f"Saved ROC curve plot to {constants.ROC_CURVE_PLT_PTH}", logging.info)
 
@@ -274,10 +282,11 @@ def feature_importance_plot(model, X_data, output_pth, shap_output_pth):
     print_and_log("Running SHAP analysis...", logging.info)
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(X_data)
-    print("running shap.summary_plot")
-    plt.figure()
+    plt.figure(figsize=(15,10))
     shap.summary_plot(shap_values, X_data, plot_type="bar")
-    print("running plt.savefig")
+
+    #Make labels fit
+    plt.tight_layout()
     plt.savefig(shap_output_pth)
     print_and_log(f"Saved shap plot under {shap_output_pth}", logging.info)
 
@@ -290,7 +299,7 @@ def feature_importance_plot(model, X_data, output_pth, shap_output_pth):
     names = [X_data.columns[i] for i in indices]
 
     # Create plot
-    plt.figure(figsize=(20,5))
+    plt.figure(figsize=(20,10))
 
     # Create plot title
     plt.title("Feature Importance")
@@ -301,6 +310,9 @@ def feature_importance_plot(model, X_data, output_pth, shap_output_pth):
 
     # Add feature names as x-axis labels
     plt.xticks(range(X_data.shape[1]), names, rotation=90)
+
+    #Make the labels fit
+    plt.tight_layout()
 
     plt.savefig(output_pth)
     print_and_log(f"Saved feature importance plot under {output_pth}", logging.info)
