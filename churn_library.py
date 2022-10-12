@@ -367,10 +367,10 @@ def test_models(features_train, features_test, model_pth_rf, model_pth_lr):
         "Predicting values from logistic regression classifier",
         logging.info)
     targets_train_preds_lr = lrc.predict(features_train)
-    targets = lrc.predict(features_test)
+    targets_test_preds_lr = lrc.predict(features_test)
 
     return (targets_train_preds_rf, targets_test_preds_rf,
-            targets_train_preds_lr, targets)
+            targets_train_preds_lr, targets_test_preds_lr)
 
 
 def train_models(features_train, features_test, targets_train, targets_test):

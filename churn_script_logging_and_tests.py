@@ -197,7 +197,7 @@ def test_encoder_helper(encoder_helper):
     '''
     try:
         input_df = pytest.input_df
-        result_df = encoder_helper(input_df, constants.CAT_COLUMNS, None)
+        result_df = encoder_helper(input_df, constants.CAT_COLUMNS)
 
         # Access all of the categorical columns
         # Will fail if at least one column does not exist
@@ -238,7 +238,7 @@ def test_perform_feature_engineering(perform_feature_engineering):
         # Run the unit
         (features_train, features_test,
             targets_train, targets_test) = perform_feature_engineering(
-            input_df, None)
+                input_df)
 
         # Check that the split train/test data is intact
         assert features_train.shape[0] > 0
