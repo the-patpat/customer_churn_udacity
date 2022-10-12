@@ -5,6 +5,13 @@ This repository contains the code need to run the project **Predict Customer Chu
 ## Project Description
 The purpose of this project is to predict whether customers are, based on features like age, gender, income and such, likely to churn from their current credit card provider, meaning that they stop using the card services. The project is also demonstrating clean code principles according to PEP8 standards. In addition to that, tests are implemented to verify the validity of the solution.
 
+## Prerequisites
+- Have Python 3.8 installed on your computer.
+- Install the necessary dependencies by running the following command:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
 ## Files and data description
 This project is structured as follows:
 ```
@@ -53,9 +60,9 @@ At the root of the folder there are other files like this README and the `requir
 ### Naked run
 To run the script without testing, execute the following at the root level of this repository:
 ```bash
-python churn_script_logging_and_testing.py
+python churn_script_logging_and_tests.py
 #Alternatively:
-ipython churn_script_logging_and_testing.py
+ipython churn_script_logging_and_tests.py
 ```
 The script will then load the data from the `data` folder, perform an explanatory data analysis which in turn will output an overview of the data on the console and create three plots in the `images/eda` folder. After that, some features are engineered in preparation for the training phase. The training phase will take some minutes, so grab a cup of coffee!
 
@@ -66,7 +73,7 @@ In general you should be able to see what's happening in the console, in additio
 ### Testing
 To run the script in testing mode, run the following command at the root level of this repository:
 ```bash
-pytest churn_script_logging_and_testing.py
+pytest churn_script_logging_and_tests.py
 ```
 This command executes the implemented unit tests in the specified script. It should execute without any error:
 ![Screenshot of Pytest](./images/pytest_screenshot.png)
