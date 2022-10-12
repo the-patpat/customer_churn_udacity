@@ -39,9 +39,9 @@ CORR_PLT_PTH = './images/eda/correlation.png'
 CLS_REPORT_PLT_PTH = './images/results/classification_report.png'
 ROC_CURVE_PLT_PTH = './images/results/roc_curve.png'
 FEATURE_IMPORTANCE_PLT_LR_PTH = './images/results/feature_importances_lr.png'
-FEATURE_IMPORTANCE_SHAP_PLT_LR_PTH = './images_results/feature_improtances_shap_lr.png'
+FEATURE_IMPORTANCE_SHAP_PLT_LR_PTH = './images/results/feature_improtances_shap_lr.png'
 FEATURE_IMPORTANCE_PLT_RFC_PTH = './images/results/feature_importances_rfc.png'
-FEATURE_IMPORTANCE_SHAP_PLT_RFC_PTH = './images_results/feature_improtances_shap_rfc.png'
+FEATURE_IMPORTANCE_SHAP_PLT_RFC_PTH = './images/results/feature_improtances_shap_rfc.png'
 
 #Paths for the models
 RFC_MODEL_PTH = './models/rfc_model.pkl'
